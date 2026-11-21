@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Midnight Vault — a heist game</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="wrap">
+  <header id="topbar">
+    <div id="title">MIDNIGHT VAULT <span id="subtitle">— one last job</span></div>
+    <div id="hud">
+      <span class="hud-item">ROOM <b id="hud-level">1/3</b></span>
+      <span class="hud-item">LOOT <b id="hud-loot">$0</b></span>
+      <span class="hud-item">LIVES <b id="hud-lives">●●●</b></span>
+      <span class="hud-item">COINS <b id="hud-coins">3</b></span>
+      <span class="hud-item">TIME <b id="hud-time">0:00</b></span>
+    </div>
+  </header>
+  <div id="alarm-row">
+    <label for="alarm-fill">ALARM</label>
+    <div id="alarm-bar"><div id="alarm-fill"></div></div>
+    <span id="alarm-text">CALM</span>
+  </div>
+  <canvas id="game" width="960" height="600"></canvas>
+  <footer id="help">
+    <span><b>WASD / Arrows</b> move</span>
+    <span><b>Shift</b> sneak</span>
+    <span><b>Click</b> toss a coin to distract a guard</span>
+    <span><b>E</b> grab loot / hack terminal / slip out</span>
+    <span><b>P</b> pause</span>
+    <span><b>R</b> restart room</span>
+    <span><b>M</b> mute</span>
+  </footer>
+  <div id="overlay"></div>
+  <div id="selftest" hidden></div>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
