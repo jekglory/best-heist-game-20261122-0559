@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MIDNIGHT VAULT — game perampokan siluman</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="wrap">
+  <header id="topbar">
+    <div id="brand">MIDNIGHT VAULT</div>
+    <div id="hud-room">THE GALLERY · RUANG 1/3</div>
+    <div id="alarm-box">
+      <div id="alarm-fill"></div>
+      <span id="alarm-text">ALARM 0 — AMAN</span>
+    </div>
+    <div class="hud-stat">LOOT <b id="hud-loot">$0</b></div>
+    <div class="hud-stat">NYAWA <b id="hud-lives">♥♥♥</b></div>
+    <div class="hud-stat">KOIN <b id="hud-coins">●●●</b></div>
+  </header>
+  <canvas id="game" width="960" height="600"></canvas>
+  <footer id="bottombar">
+    <span id="hud-objective">Ambil BERLIAN, lalu kabur lewat pintu EXIT.</span>
+    <span id="hud-hint"></span>
+    <span id="hud-message"></span>
+  </footer>
+  <p id="controls">WASD / panah bergerak · SHIFT menyelinap · klik lempar koin · E ambil / retas / keluar · P jeda · M suara · R ulang</p>
+  <pre id="selftest"></pre>
+</main>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
