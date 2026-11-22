@@ -77,7 +77,8 @@ function hideOverlay() {
   overlay.innerHTML = '';
 }
 
-function titleHtml() {
+function titlePanel() {
+  // Title screen: the pitch, the rules, the controls, one call to action.
   return `<div class="panel"><h1>MIDNIGHT VAULT</h1>
     <p class="big">One room. Two guards. One diamond.</p>
     <p>Cross the room unseen. Guards and cameras watch with cones of
@@ -91,14 +92,14 @@ function titleHtml() {
     <p class="big">Press ENTER to start</p></div>`;
 }
 
-function caughtHtml() {
+function caughtPanel() {
   return `<div class="panel"><h2>CAUGHT!</h2>
     <p>${game.room ? game.room.message : 'The job is blown.'}</p>
     <p>Lives left: ${game.lives}. Score: $${game.score.toLocaleString()}.</p>
     <p class="big">Press R to try the room again</p></div>`;
 }
 
-function roomClearHtml() {
+function roomClearPanel() {
   const room = game.room;
   return `<div class="panel"><h2>ROOM CLEAR</h2>
     <p class="big">Diamond secured — $${room.def.diamond.value.toLocaleString()}</p>
@@ -106,13 +107,13 @@ function roomClearHtml() {
     <p class="big">Press ENTER for the next room</p></div>`;
 }
 
-function gameOverHtml() {
+function gameOverPanel() {
   return `<div class="panel"><h2>THE JOB IS BLOWN</h2>
     <p>Three strikes and the crew walks. Final score: $${game.score.toLocaleString()}.</p>
     <p class="big">Press R to start over</p></div>`;
 }
 
-function winHtml() {
+function winPanel() {
   return `<div class="panel"><h1>CLEAN GETAWAY</h1>
     <p class="big">All three diamonds. No alarms that stuck.</p>
     <p>Final score: $${game.score.toLocaleString()} in ${fmtTime(game.totalTime)}.</p>
@@ -120,17 +121,17 @@ function winHtml() {
     <p class="big">Press R to run it again</p></div>`;
 }
 
-function pausedHtml() {
+function pausedPanel() {
   return `<div class="panel"><h2>PAUSED</h2><p class="big">Press P to keep going</p></div>`;
 }
 
 function syncOverlay() {
-  if (game.state === 'title') showOverlay(titleHtml());
-  else if (game.state === 'caught') showOverlay(caughtHtml());
-  else if (game.state === 'roomclear') showOverlay(roomClearHtml());
-  else if (game.state === 'gameover') showOverlay(gameOverHtml());
-  else if (game.state === 'win') showOverlay(winHtml());
-  else if (game.state === 'paused') showOverlay(pausedHtml());
+  if (game.state === 'title') showOverlay(titlePanel());
+  else if (game.state === 'caught') showOverlay(caughtPanel());
+  else if (game.state === 'roomclear') showOverlay(roomClearPanel());
+  else if (game.state === 'gameover') showOverlay(gameOverPanel());
+  else if (game.state === 'win') showOverlay(winPanel());
+  else if (game.state === 'paused') showOverlay(pausedPanel());
   else hideOverlay();
 }
 
@@ -328,7 +329,8 @@ function applyShot(name) {
 
 // ---------- in-page logic self-test ----------
 // Runs the engine headlessly (?selftest=1) and writes the verdict into the
-// page so a headless browser dump can read it. No rendering needed.
+// page so a headless browser dump can read it. Fourteen checks, no
+// rendering needed — the DOM verdict is the whole output.
 function runSelfTest() {
   const out = [];
   function check(name, ok) {

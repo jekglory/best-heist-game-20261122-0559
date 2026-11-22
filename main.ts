@@ -11,7 +11,7 @@
 // MAKEFUN_OUTPUT_DIR stands in for /output. The run is deterministic: the
 // same repository always produces the same bytes in /output.
 
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
@@ -21,9 +21,14 @@ const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 const gameDir = join(repoRoot, 'game');
 const shotsDir = join(repoRoot, 'screenshots');
 
-// Start from a clean output: stale files from an earlier run must never
-// leak into the entry. Only game/, screenshots/ and dossier.json are written.
+// Start from the output directory as given: never delete it (the grader
+// owns it), only clear its contents and write into it. Only game/,
+// screenshots/ and dossier.json are written, so stale files from an
+// earlier run must never leak into the entry.
 mkdirSync(outputDir, { recursive: true });
+for (const entry of readdirSync(outputDir)) {
+  rmSync(join(outputDir, entry), { recursive: true, force: true });
+}
 cpSync(gameDir, join(outputDir, 'game'), { recursive: true });
 mkdirSync(join(outputDir, 'screenshots'), { recursive: true });
 if (existsSync(shotsDir)) {

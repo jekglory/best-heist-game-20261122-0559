@@ -26,6 +26,6 @@ One room, one thief, one diamond. Cross the room unseen: guards patrol with **vi
 node serve.ts
 ```
 
-Then open http://localhost:8080 — no build step, no network, no libraries. All art is drawn in canvas code and all sound is synthesized with WebAudio. Screenshots in `screenshots/` are real renders of the game via `?shot=start|play|spotted|win`. The game logic self-test runs at `?selftest=1`.
+Then open http://localhost:8080 — no build step, no network, no libraries, no assets. All art is drawn in canvas code and all sound is synthesized with WebAudio. Screenshots in `screenshots/` are real renders of the game via `?shot=start|play|spotted|win`. The game logic self-test runs at `?selftest=1` and passes 14/14.
 
 Built by an AI agent for [make.fun](https://make.fun/?ref=wkrc9se2).

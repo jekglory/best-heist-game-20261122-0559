@@ -1,15 +1,15 @@
-// Room layouts for Midnight Vault. One room = one level, all of it visible in
-// a single 960x600 frame. Coordinates are canvas pixels. Walls and furniture
-// block both movement and line of sight; guards patrol waypoints; cameras
-// sweep from their wall mounts; the diamond is the level's loot target and
-// the green door is the way out once it is taken.
+// Room layouts for Midnight Vault. Each level is one room shown whole in a
+// single 960x600 frame, coordinates in canvas pixels. Walls and furniture
+// stop movement and break line of sight. Guards walk waypoint loops, wall
+// cameras sweep back and forth, the diamond is the room's prize and the
+// green door is the exit once the diamond is pocketed.
 
 export const ROOM_W = 960;
 export const ROOM_H = 600;
 
-// A wall/furniture block: {x, y, w, h, kind} where kind is 'wall' (room
-// shell / pillar), 'case' (display case), 'desk', 'plant' or 'sofa'.
-function rect(x, y, w, h, kind) {
+// One solid block: {x, y, w, h, kind}. kind is 'wall' (room shell or
+// pillar), 'case' (display case), 'desk', 'plant' or 'sofa'.
+function block(x, y, w, h, kind) {
   return { x, y, w, h, kind };
 }
 
@@ -17,7 +17,7 @@ export const LEVELS = [
   {
     name: 'THE GALLERY',
     seed: 7,
-    par: 75,
+    par: 75, // target clear time, seconds — beating it pays a time bonus
     start: { x: 60, y: 540 },
     exit: { x: 896, y: 40, w: 44, h: 56 },
     diamond: { x: 880, y: 300, value: 5000 },
@@ -28,14 +28,14 @@ export const LEVELS = [
       { x: 480, y: 300, value: 350, kind: 'vase' },
     ],
     solids: [
-      rect(0, 0, 960, 16, 'wall'), rect(0, 584, 960, 16, 'wall'),
-      rect(0, 0, 16, 600, 'wall'), rect(944, 0, 16, 600, 'wall'),
-      rect(240, 150, 150, 26, 'case'),
-      rect(560, 150, 150, 26, 'case'),
-      rect(400, 330, 160, 26, 'desk'),
-      rect(180, 420, 26, 120, 'sofa'),
-      rect(760, 380, 26, 120, 'sofa'),
-      rect(470, 60, 20, 20, 'plant'),
+      block(0, 0, 960, 16, 'wall'), block(0, 584, 960, 16, 'wall'),
+      block(0, 0, 16, 600, 'wall'), block(944, 0, 16, 600, 'wall'),
+      block(240, 150, 150, 26, 'case'),
+      block(560, 150, 150, 26, 'case'),
+      block(400, 330, 160, 26, 'desk'),
+      block(180, 420, 26, 120, 'sofa'),
+      block(760, 380, 26, 120, 'sofa'),
+      block(470, 60, 20, 20, 'plant'),
     ],
     guards: [
       {
@@ -66,15 +66,15 @@ export const LEVELS = [
       { x: 760, y: 510, value: 900, kind: 'gold' },
     ],
     solids: [
-      rect(0, 0, 960, 16, 'wall'), rect(0, 584, 960, 16, 'wall'),
-      rect(0, 0, 16, 600, 'wall'), rect(944, 0, 16, 600, 'wall'),
-      rect(430, 250, 100, 100, 'case'),
-      rect(200, 200, 120, 26, 'desk'),
-      rect(640, 200, 120, 26, 'desk'),
-      rect(200, 380, 120, 26, 'desk'),
-      rect(640, 380, 120, 26, 'desk'),
-      rect(320, 90, 20, 20, 'plant'),
-      rect(620, 490, 20, 20, 'plant'),
+      block(0, 0, 960, 16, 'wall'), block(0, 584, 960, 16, 'wall'),
+      block(0, 0, 16, 600, 'wall'), block(944, 0, 16, 600, 'wall'),
+      block(430, 250, 100, 100, 'case'),
+      block(200, 200, 120, 26, 'desk'),
+      block(640, 200, 120, 26, 'desk'),
+      block(200, 380, 120, 26, 'desk'),
+      block(640, 380, 120, 26, 'desk'),
+      block(320, 90, 20, 20, 'plant'),
+      block(620, 490, 20, 20, 'plant'),
     ],
     guards: [
       {
@@ -111,14 +111,14 @@ export const LEVELS = [
       { x: 480, y: 300, value: 1500, kind: 'gold' },
     ],
     solids: [
-      rect(0, 0, 960, 16, 'wall'), rect(0, 584, 960, 16, 'wall'),
-      rect(0, 0, 16, 600, 'wall'), rect(944, 0, 16, 600, 'wall'),
-      rect(380, 60, 200, 26, 'case'),
-      rect(180, 240, 26, 140, 'sofa'),
-      rect(754, 240, 26, 140, 'sofa'),
-      rect(300, 420, 360, 26, 'desk'),
-      rect(60, 260, 20, 20, 'plant'),
-      rect(880, 260, 20, 20, 'plant'),
+      block(0, 0, 960, 16, 'wall'), block(0, 584, 960, 16, 'wall'),
+      block(0, 0, 16, 600, 'wall'), block(944, 0, 16, 600, 'wall'),
+      block(380, 60, 200, 26, 'case'),
+      block(180, 240, 26, 140, 'sofa'),
+      block(754, 240, 26, 140, 'sofa'),
+      block(300, 420, 360, 26, 'desk'),
+      block(60, 260, 20, 20, 'plant'),
+      block(880, 260, 20, 20, 'plant'),
     ],
     guards: [
       {

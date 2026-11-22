@@ -1,3 +1,4 @@
+/* Midnight Vault — page chrome around the canvas. Dark room, gold trim. */
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: #0b0b12; }
 body {
@@ -26,7 +27,7 @@ body {
   background: linear-gradient(90deg, #3fae5a, #ffd75e 55%, #ff4d4d 85%);
   transition: width 120ms linear;
 }
-#alarm-text { min-width: 74px; text-align: right; font-weight: 700; color: #3fae5a; }
+#alarm-text { min-width: 84px; text-align: right; font-weight: 700; color: #3fae5a; }
 #game {
   display: block; width: 960px; max-width: 100%; height: auto;
   background: #14141f; border: 1px solid #33334a; border-radius: 6px;
@@ -44,7 +45,7 @@ body {
 }
 #overlay.show { display: flex; }
 #overlay .panel {
-  background: rgba(10, 10, 18, 0.88); border: 1px solid #ffd75e;
+  background: rgba(10, 10, 18, 0.9); border: 1px solid #ffd75e;
   border-radius: 10px; padding: 26px 34px; max-width: 560px;
 }
 #overlay h1 { margin: 0 0 8px; font-size: 30px; letter-spacing: 4px; color: #ffd75e; }

@@ -1,8 +1,8 @@
-// Canvas rendering for Midnight Vault. Everything is drawn in code — no
-// image assets — so the game is a handful of static files and the dossier
-// carries the whole game. One frame shows the whole room: the thief, the
-// guards and their vision cones, the cameras and their sweeps, the loot and
-// the alarm state.
+// Canvas rendering for Midnight Vault. Every picture is drawn in code —
+// no image assets — so the game is a handful of static files and the
+// dossier carries the whole game. One frame shows the entire room: the
+// thief, the guards and their vision cones, the sweeping cameras, the loot
+// and the alarm state.
 
 import { ROOM_W, ROOM_H } from './levels.js';
 
@@ -21,7 +21,7 @@ function drawCone(ctx, x, y, dir, range, halfAngle, fill, edge) {
   ctx.stroke();
 }
 
-function drawRect(ctx, r, fill, stroke) {
+function drawBox(ctx, r, fill, stroke) {
   ctx.fillStyle = fill;
   ctx.fillRect(r.x, r.y, r.w, r.h);
   if (stroke) {
@@ -31,12 +31,12 @@ function drawRect(ctx, r, fill, stroke) {
   }
 }
 
-function label(ctx, text, x, y, color, size) {
+function text(ctx, str, x, y, color, size) {
   ctx.font = `700 ${size}px "Segoe UI", Arial, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = color;
-  ctx.fillText(text, x, y);
+  ctx.fillText(str, x, y);
 }
 
 export function render(ctx, game) {
@@ -53,8 +53,8 @@ export function render(ctx, game) {
   }
 
   if (!room) {
-    label(ctx, 'MIDNIGHT VAULT', ROOM_W / 2, ROOM_H / 2 - 20, '#ffd75e', 44);
-    label(ctx, 'press ENTER to start the job', ROOM_W / 2, ROOM_H / 2 + 30, '#b9b3c4', 16);
+    text(ctx, 'MIDNIGHT VAULT', ROOM_W / 2, ROOM_H / 2 - 20, '#ffd75e', 44);
+    text(ctx, 'press ENTER to start the job', ROOM_W / 2, ROOM_H / 2 + 30, '#b9b3c4', 16);
     return;
   }
 
@@ -63,8 +63,8 @@ export function render(ctx, game) {
 
   // --- exit door (green, glows once the diamond is taken) ---
   const ex = def.exit;
-  drawRect(ctx, ex, room.diamondTaken ? '#1f7a37' : '#2a4a32', '#4caf6d');
-  label(ctx, 'EXIT', ex.x + ex.w / 2, ex.y + ex.h / 2, room.diamondTaken ? '#b8ffcf' : '#7fae8d', 11);
+  drawBox(ctx, ex, room.diamondTaken ? '#1f7a37' : '#2a4a32', '#4caf6d');
+  text(ctx, 'EXIT', ex.x + ex.w / 2, ex.y + ex.h / 2, room.diamondTaken ? '#b8ffcf' : '#7fae8d', 11);
   if (room.diamondTaken) {
     ctx.strokeStyle = 'rgba(120,255,160,0.7)';
     ctx.lineWidth = 2;
@@ -73,9 +73,9 @@ export function render(ctx, game) {
 
   // --- hack terminal ---
   const term = def.terminal;
-  drawRect(ctx, term, '#232338', '#6f6f9e');
-  label(ctx, 'CAM', term.x + term.w / 2, term.y + 12, '#9fb4ff', 10);
-  label(ctx, 'HACK', term.x + term.w / 2, term.y + 22, '#9fb4ff', 8);
+  drawBox(ctx, term, '#232338', '#6f6f9e');
+  text(ctx, 'CAM', term.x + term.w / 2, term.y + 12, '#9fb4ff', 10);
+  text(ctx, 'HACK', term.x + term.w / 2, term.y + 22, '#9fb4ff', 8);
   if (room.hackProgress > 0) {
     ctx.fillStyle = '#9fb4ff';
     ctx.fillRect(term.x - 4, term.y + term.h + 4, term.w + 8, 5);
@@ -83,7 +83,7 @@ export function render(ctx, game) {
     ctx.fillRect(term.x - 4, term.y + term.h + 4, (term.w + 8) * room.hackProgress, 5);
   }
 
-  // --- vision cones under everything else ---
+  // --- vision cones sit under everything else ---
   for (const c of room.cameras) {
     drawCone(ctx, c.x, c.y, c.dir, c.range, c.halfAngle,
       camerasOff ? 'rgba(120,120,140,0.05)'
@@ -101,14 +101,14 @@ export function render(ctx, game) {
   // --- furniture and walls ---
   for (const s of def.solids) {
     if (s.kind === 'wall') {
-      drawRect(ctx, s, '#2c2c40', '#45455e');
+      drawBox(ctx, s, '#2c2c40', '#45455e');
     } else if (s.kind === 'case') {
-      drawRect(ctx, s, '#3a2f1d', '#c9a227');
-      label(ctx, '◆', s.x + s.w / 2, s.y + s.h / 2, '#ffd75e', 13);
+      drawBox(ctx, s, '#3a2f1d', '#c9a227');
+      text(ctx, '◆', s.x + s.w / 2, s.y + s.h / 2, '#ffd75e', 13);
     } else if (s.kind === 'desk') {
-      drawRect(ctx, s, '#4a3226', '#8a6a4a');
+      drawBox(ctx, s, '#4a3226', '#8a6a4a');
     } else if (s.kind === 'sofa') {
-      drawRect(ctx, s, '#3d2b4a', '#7a5a9e');
+      drawBox(ctx, s, '#3d2b4a', '#7a5a9e');
     } else if (s.kind === 'plant') {
       ctx.fillStyle = '#2f6b3a';
       ctx.beginPath();
@@ -119,13 +119,13 @@ export function render(ctx, game) {
     }
   }
 
-  // --- loot ---
+  // --- side loot, gently bobbing ---
   for (const l of room.loot) {
     if (l.taken) continue;
     const bob = Math.sin(room.time * 2 + l.bob) * 2;
     if (l.kind === 'painting') {
-      drawRect(ctx, { x: l.x - 14, y: l.y - 10 + bob, w: 28, h: 20 }, '#5a3a1a', '#ffd75e');
-      label(ctx, '$', l.x, l.y + bob, '#ffd75e', 13);
+      drawBox(ctx, { x: l.x - 14, y: l.y - 10 + bob, w: 28, h: 20 }, '#5a3a1a', '#ffd75e');
+      text(ctx, '$', l.x, l.y + bob, '#ffd75e', 13);
     } else if (l.kind === 'gold') {
       ctx.fillStyle = '#ffd75e';
       ctx.beginPath();
@@ -145,7 +145,7 @@ export function render(ctx, game) {
     }
   }
 
-  // --- the diamond ---
+  // --- the diamond, pulsing to catch the eye ---
   const d = def.diamond;
   if (!room.diamondTaken) {
     const pulse = 1 + Math.sin(room.time * 3) * 0.12;
@@ -169,10 +169,10 @@ export function render(ctx, game) {
     ctx.beginPath();
     ctx.arc(d.x, d.y, 26, 0, Math.PI * 2);
     ctx.stroke();
-    label(ctx, 'THE DIAMOND', d.x, d.y + 34, '#bfe9ff', 10);
+    text(ctx, 'THE DIAMOND', d.x, d.y + 34, '#bfe9ff', 10);
   }
 
-  // --- tossed coins ---
+  // --- tossed coins on the floor ---
   for (const c of room.coinsOnFloor) {
     ctx.fillStyle = '#ffd75e';
     ctx.beginPath();
@@ -182,7 +182,7 @@ export function render(ctx, game) {
     ctx.stroke();
   }
 
-  // --- cameras ---
+  // --- cameras on their wall mounts ---
   for (const c of room.cameras) {
     ctx.fillStyle = camerasOff ? '#55555f' : '#3a3a4a';
     ctx.beginPath();
@@ -203,7 +203,8 @@ export function render(ctx, game) {
     ctx.fill();
   }
 
-  // --- guards ---
+  // --- guards, with a facing tick and a cap ---
+  // Red = chasing, amber = investigating, blue = patrolling.
   for (const g of room.guards) {
     ctx.fillStyle = g.mode === 'chase' ? '#c22f2f' : g.mode === 'investigate' ? '#c27a1e' : '#2f4a7a';
     ctx.beginPath();
@@ -212,18 +213,17 @@ export function render(ctx, game) {
     ctx.strokeStyle = '#d8d2c2';
     ctx.lineWidth = 1.5;
     ctx.stroke();
-    // facing tick + cap
     ctx.beginPath();
     ctx.moveTo(g.x, g.y);
     ctx.lineTo(g.x + Math.cos(g.dir) * (g.r + 5), g.y + Math.sin(g.dir) * (g.r + 5));
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 2;
     ctx.stroke();
-    label(ctx, '!', g.x, g.y - g.r - 10, g.seesThief ? '#ff4d4d' : 'rgba(255,77,77,0)', 14);
-    if (g.mode === 'investigate') label(ctx, '?', g.x, g.y - g.r - 10, '#ffd75e', 14);
+    text(ctx, '!', g.x, g.y - g.r - 10, g.seesThief ? '#ff4d4d' : 'rgba(255,77,77,0)', 14);
+    if (g.mode === 'investigate') text(ctx, '?', g.x, g.y - g.r - 10, '#ffd75e', 14);
   }
 
-  // --- thief ---
+  // --- the thief, masked, eyes toward the movement direction ---
   const t = room.thief;
   ctx.save();
   ctx.translate(t.x, t.y);
@@ -237,13 +237,12 @@ export function render(ctx, game) {
   ctx.strokeStyle = '#ffd75e';
   ctx.lineWidth = 2;
   ctx.stroke();
-  // mask + eyes facing movement direction
   ctx.rotate(t.dir);
   ctx.fillStyle = '#ffd75e';
   ctx.fillRect(2, -7, 8, 4);
   ctx.fillRect(2, 3, 8, 4);
   ctx.restore();
-  if (t.sneaking) label(ctx, 'sneaking', t.x, t.y - t.r - 10, '#b9b3c4', 9);
+  if (t.sneaking) text(ctx, 'sneaking', t.x, t.y - t.r - 10, '#b9b3c4', 9);
 
   // --- sparkles on pickup ---
   for (const s of room.sparkles) {
@@ -257,7 +256,7 @@ export function render(ctx, game) {
     }
   }
 
-  // --- room name + hint line ---
+  // --- room name, hint line, messages ---
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   ctx.font = '700 13px "Segoe UI", Arial, sans-serif';

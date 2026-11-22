@@ -1,7 +1,8 @@
-// Synthesized sound for Midnight Vault: no audio files, every effect is a
-// short WebAudio oscillator envelope, so the game ships no assets at all.
+// Synthesized sound for Midnight Vault: no audio files at all, every
+// effect is a short WebAudio oscillator envelope, so the game ships zero
+// assets and makes zero network requests. Mute with M.
 
-let ctx = null;
+let audioCtx = null;
 let muted = false;
 
 export function setMuted(value) {
@@ -13,22 +14,22 @@ export function isMuted() {
   return muted;
 }
 
-function ensure() {
-  if (!ctx) {
+function ensureCtx() {
+  if (!audioCtx) {
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
-      ctx = new AC();
+      audioCtx = new AC();
     } catch {
-      ctx = null;
+      audioCtx = null;
     }
   }
-  if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
-  return ctx;
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  return audioCtx;
 }
 
 function tone(freq, dur, type, gain, when) {
   if (muted) return;
-  const ac = ensure();
+  const ac = ensureCtx();
   if (!ac) return;
   const t0 = ac.currentTime + (when || 0);
   const osc = ac.createOscillator();
@@ -77,6 +78,7 @@ export const sfx = {
     tone(1046, 0.3, 'triangle', 0.09, 0.24);
   },
   win() {
+    // Rising arpeggio for the clean getaway.
     [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, 0.22, 'triangle', 0.08, i * 0.13));
   },
   click() {

@@ -1,13 +1,14 @@
-// Simulation for Midnight Vault: movement, vision cones, line of sight,
-// guard patrol / chase / investigate, sweeping cameras, the alarm meter,
-// loot, the hack terminal and the win / caught rules. Pure deterministic
-// logic — the only randomness is a seeded generator fixed per level, so a
-// screenshot state and the self-test always replay the same way.
+// Simulation for Midnight Vault: thief movement, vision cones, line of
+// sight, guard patrol / chase / investigate, sweeping wall cameras, the
+// alarm meter, loot, the hack terminal and the win / caught rules. The
+// logic is fully deterministic — the only randomness is a seeded generator
+// fixed per level — so a screenshot state and the self-test always replay
+// the same way.
 
 import { LEVELS, ROOM_W, ROOM_H } from './levels.js';
 
-// Small seeded generator (mulberry32) so level flavour never depends on
-// Math.random or the wall clock.
+// Tiny seeded generator (mulberry32) so level flavour never depends on
+// Math.random or on the wall clock. Same seed, same sequence, every run.
 export function seeded(seed) {
   let a = seed >>> 0;
   return function next() {
@@ -20,19 +21,19 @@ export function seeded(seed) {
 
 const TAU = Math.PI * 2;
 
-function angleDiff(a, b) {
+function wrapAngle(a, b) {
   let d = a - b;
   while (d > Math.PI) d -= TAU;
   while (d < -Math.PI) d += TAU;
   return d;
 }
 
-function dist(x1, y1, x2, y2) {
+function distance(x1, y1, x2, y2) {
   return Math.hypot(x2 - x1, y2 - y1);
 }
 
-// True when the segment (x1,y1)-(x2,y2) touches rectangle r.
-function segmentHitsRect(x1, y1, x2, y2, r) {
+// True when the segment (x1,y1)-(x2,y2) touches rectangle r (slab test).
+function segmentCrosses(x1, y1, x2, y2, r) {
   const dx = x2 - x1;
   const dy = y2 - y1;
   let tmin = 0;
@@ -62,19 +63,19 @@ function segmentHitsRect(x1, y1, x2, y2, r) {
 
 export function hasLineOfSight(x1, y1, x2, y2, solids) {
   for (const s of solids) {
-    if (segmentHitsRect(x1, y1, x2, y2, s)) return false;
+    if (segmentCrosses(x1, y1, x2, y2, s)) return false;
   }
   return true;
 }
 
-// Does an observer at (ox,oy) facing `dir` with the given cone see the
-// thief? Sneaking halves the range at which the thief can be spotted.
+// Can an observer at (ox,oy) facing `dir` with this cone see the thief?
+// Sneaking shrinks the distance at which the thief can be spotted.
 export function canSee(ox, oy, dir, range, halfAngle, thief, solids) {
-  const d = dist(ox, oy, thief.x, thief.y);
-  const effective = thief.sneaking ? range * 0.55 : range;
-  if (d > effective) return false;
+  const d = distance(ox, oy, thief.x, thief.y);
+  const reach = thief.sneaking ? range * 0.55 : range;
+  if (d > reach) return false;
   const ang = Math.atan2(thief.y - oy, thief.x - ox);
-  if (Math.abs(angleDiff(ang, dir)) > halfAngle) return false;
+  if (Math.abs(wrapAngle(ang, dir)) > halfAngle) return false;
   return hasLineOfSight(ox, oy, thief.x, thief.y, solids);
 }
 
@@ -82,12 +83,14 @@ function circleHitsSolids(x, y, r, solids) {
   for (const s of solids) {
     const cx = Math.max(s.x, Math.min(x, s.x + s.w));
     const cy = Math.max(s.y, Math.min(y, s.y + s.h));
-    if (dist(x, y, cx, cy) < r) return true;
+    if (distance(x, y, cx, cy) < r) return true;
   }
   return false;
 }
 
-function moveCircle(e, dx, dy, solids) {
+// Move a circular body axis by axis so it slides along walls instead of
+// sticking, then clamp it inside the room shell.
+function slideCircle(e, dx, dy, solids) {
   const nx = e.x + dx;
   if (!circleHitsSolids(nx, e.y, e.r, solids)) e.x = nx;
   const ny = e.y + dy;
@@ -150,11 +153,11 @@ export function loadLevel(game, index) {
   return room;
 }
 
-function nearestGuard(room, x, y) {
+function closestGuard(room, x, y) {
   let best = null;
   let bestD = Infinity;
   for (const g of room.guards) {
-    const d = dist(g.x, g.y, x, y);
+    const d = distance(g.x, g.y, x, y);
     if (d < bestD) { bestD = d; best = g; }
   }
   return best;
@@ -169,13 +172,13 @@ export function tossCoin(game) {
   return true;
 }
 
-// A click tosses the coin toward the clicked point; the coin lands there
-// and the nearest guard walks over to look at it.
+// A click tosses a coin at the clicked point; it lands there and the
+// nearest guard walks over to have a look.
 export function tossCoinAt(game, tx, ty) {
   const room = game.room;
   if (!room || game.state !== 'playing' || game.coins <= 0) return false;
   game.coins -= 1;
-  const g = nearestGuard(room, tx, ty);
+  const g = closestGuard(room, tx, ty);
   if (g) {
     g.mode = 'investigate';
     g.target = { x: tx, y: ty };
@@ -187,15 +190,15 @@ export function tossCoinAt(game, tx, ty) {
   return true;
 }
 
-function stepGuard(room, g, dt) {
+function moveGuard(room, g, dt) {
   const thief = room.thief;
   if (g.mode === 'chase') {
-    const d = dist(g.x, g.y, thief.x, thief.y);
+    const d = distance(g.x, g.y, thief.x, thief.y);
     const ang = Math.atan2(thief.y - g.y, thief.x - g.x);
     g.dir = ang;
     if (d > 26) {
       const sp = g.speed * 1.55;
-      moveCircle(g, Math.cos(ang) * sp * dt, Math.sin(ang) * sp * dt, room.def.solids);
+      slideCircle(g, Math.cos(ang) * sp * dt, Math.sin(ang) * sp * dt, room.def.solids);
     }
     if (d > g.range * 1.4) {
       g.mode = 'patrol';
@@ -204,11 +207,11 @@ function stepGuard(room, g, dt) {
     return;
   }
   if (g.mode === 'investigate' && g.target) {
-    const d = dist(g.x, g.y, g.target.x, g.target.y);
+    const d = distance(g.x, g.y, g.target.x, g.target.y);
     const ang = Math.atan2(g.target.y - g.y, g.target.x - g.x);
     g.dir = ang;
     if (d > 14) {
-      moveCircle(g, Math.cos(ang) * g.speed * dt, Math.sin(ang) * g.speed * dt, room.def.solids);
+      slideCircle(g, Math.cos(ang) * g.speed * dt, Math.sin(ang) * g.speed * dt, room.def.solids);
     } else if (room.time >= g.pauseUntil) {
       g.pauseUntil = room.time + 1.6;
       g.target = null;
@@ -216,10 +219,10 @@ function stepGuard(room, g, dt) {
     }
     return;
   }
-  // Patrol: walk the waypoints, pausing a beat at each one to look around.
+  // Patrol: walk the waypoint loop, pausing a beat at each stop to look around.
   if (room.time < g.pauseUntil) return;
   const wp = g.waypoints[g.wp % g.waypoints.length];
-  const d = dist(g.x, g.y, wp[0], wp[1]);
+  const d = distance(g.x, g.y, wp[0], wp[1]);
   if (d < 10) {
     g.wp += 1;
     g.pauseUntil = room.time + 0.7;
@@ -228,7 +231,7 @@ function stepGuard(room, g, dt) {
   }
   const ang = Math.atan2(wp[1] - g.y, wp[0] - g.x);
   g.dir = ang;
-  moveCircle(g, Math.cos(ang) * g.speed * dt, Math.sin(ang) * g.speed * dt, room.def.solids);
+  slideCircle(g, Math.cos(ang) * g.speed * dt, Math.sin(ang) * g.speed * dt, room.def.solids);
 }
 
 export function stepGame(game, input, dt) {
@@ -252,18 +255,18 @@ export function stepGame(game, input, dt) {
     const sp = thief.speed * (thief.sneaking ? 0.45 : 1);
     const nx = (mx / len) * sp * dt;
     const ny = (my / len) * sp * dt;
-    moveCircle(thief, nx, ny, room.def.solids);
+    slideCircle(thief, nx, ny, room.def.solids);
     thief.dir = Math.atan2(ny, nx);
   }
 
-  // --- cameras sweep ---
+  // --- wall cameras sweep ---
   const camerasOff = room.time < room.camerasOffUntil;
   for (const c of room.cameras) {
     c.dir = c.base + Math.sin(room.time * c.speed + c.phase) * c.sweep;
     c.seesThief = !camerasOff && canSee(c.x, c.y, c.dir, c.range, c.halfAngle, thief, room.def.solids);
   }
 
-  // --- guards see / chase ---
+  // --- guards spot / chase ---
   let anyoneSees = false;
   for (const g of room.guards) {
     g.seesThief = canSee(g.x, g.y, g.dir, g.range, g.halfAngle, thief, room.def.solids);
@@ -278,7 +281,7 @@ export function stepGame(game, input, dt) {
         g.target = { x: thief.x, y: thief.y };
       }
     }
-    stepGuard(room, g, dt);
+    moveGuard(room, g, dt);
   }
   const cameraSees = room.cameras.some((c) => c.seesThief);
   if (cameraSees) anyoneSees = true;
@@ -295,21 +298,22 @@ export function stepGame(game, input, dt) {
   if (before < 75 && room.alarm >= 75) room.message = 'ALARM! Get out of sight!';
 
   // --- caught: a guard touches the thief, or the alarm maxes out ---
+  // Either way the room resets and a life is lost.
   for (const g of room.guards) {
-    if (dist(g.x, g.y, thief.x, thief.y) < g.r + thief.r + 2) {
-      caught(game, 'A guard grabbed you.');
+    if (distance(g.x, g.y, thief.x, thief.y) < g.r + thief.r + 2) {
+      getCaught(game, 'A guard grabbed you.');
       return;
     }
   }
   if (room.alarm >= 100) {
-    caught(game, 'The alarm went off — security swarmed the room.');
+    getCaught(game, 'The alarm went off — security swarmed the room.');
     return;
   }
 
   // --- loot, diamond, terminal, exit ---
   if (input.interact) {
     const d = room.def.diamond;
-    if (!room.diamondTaken && dist(thief.x, thief.y, d.x, d.y) < 46) {
+    if (!room.diamondTaken && distance(thief.x, thief.y, d.x, d.y) < 46) {
       room.diamondTaken = true;
       game.score += d.value;
       room.message = `The diamond is yours — $${d.value.toLocaleString()}. Now reach the green door!`;
@@ -317,7 +321,7 @@ export function stepGame(game, input, dt) {
       room.sparkles.push({ x: d.x, y: d.y, t: 0 });
     }
     for (const l of room.loot) {
-      if (!l.taken && dist(thief.x, thief.y, l.x, l.y) < 40) {
+      if (!l.taken && distance(thief.x, thief.y, l.x, l.y) < 40) {
         l.taken = true;
         game.score += l.value;
         room.message = `Pocketed loot +$${l.value.toLocaleString()}.`;
@@ -328,7 +332,7 @@ export function stepGame(game, input, dt) {
     const term = room.def.terminal;
     const tcx = term.x + term.w / 2;
     const tcy = term.y + term.h / 2;
-    if (dist(thief.x, thief.y, tcx, tcy) < 58) {
+    if (distance(thief.x, thief.y, tcx, tcy) < 58) {
       room.hacking = true;
       room.hackProgress += dt / 2.2;
       if (room.hackProgress >= 1) {
@@ -345,8 +349,8 @@ export function stepGame(game, input, dt) {
     const ex = room.def.exit;
     const ecx = ex.x + ex.w / 2;
     const ecy = ex.y + ex.h / 2;
-    if (room.diamondTaken && dist(thief.x, thief.y, ecx, ecy) < 52) {
-      roomClear(game);
+    if (room.diamondTaken && distance(thief.x, thief.y, ecx, ecy) < 52) {
+      clearRoom(game);
       return;
     }
   } else {
@@ -359,14 +363,14 @@ export function stepGame(game, input, dt) {
   for (const c of room.coinsOnFloor) c.t += dt;
 }
 
-function caught(game, why) {
+function getCaught(game, why) {
   game.lives -= 1;
   game.state = game.lives <= 0 ? 'gameover' : 'caught';
   game.stateTime = 0;
   game.room.message = why;
 }
 
-function roomClear(game) {
+function clearRoom(game) {
   const room = game.room;
   const timeBonus = Math.max(0, Math.round((room.def.par - room.time) * 20));
   game.score += timeBonus;

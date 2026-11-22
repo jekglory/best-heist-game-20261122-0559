@@ -1,7 +1,9 @@
 // Tiny static server for the game (Node 22, standard library only).
 // `node serve.ts` serves game/ on http://localhost:8080 so the entry can be
-// played and screenshotted locally without a build step. It only ever serves
-// files from inside game/, and sends the MIME types a browser game needs.
+// played and screenshotted locally without a build step. Pass a port as the
+// first argument to serve elsewhere, e.g. `node serve.ts --port 8081`.
+// It only ever serves files from inside game/, and sends the MIME types a
+// browser game needs.
 
 import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -34,6 +36,7 @@ createServer((req, res) => {
   if (pathname.endsWith('/')) pathname += 'index.html';
   const file = resolve(join(root, normalize(pathname)));
   if (file !== root && !file.startsWith(root + sep)) {
+    // Path traversal outside game/ is refused outright.
     res.writeHead(403).end('forbidden');
     return;
   }
